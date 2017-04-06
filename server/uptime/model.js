@@ -1,30 +1,16 @@
 const R = require('ramda')
 const spawn = require('child_process').spawn
+const fs = require('fs')
+const path = require('path')
 
-const hostData = {
-  'nitrogen.local': {
-    currentStatus: 'unknown',
-    statusHistory: [],
-  },
-  'foo': {
-    currentStatus: 'unknown',
-    statusHistory: [
-      { status: 'online', time: new Date(), },
-    ],
-  },
-  'bar': {
-    currentStatus: 'unknown',
-    statusHistory: [
-      { status: 'offline', time: new Date(), },
-    ],
-  },
-  'bazz': {
-    currentStatus: 'unknown',
-    statusHistory: [
-      { status: 'unknown', time: new Date(), },
-    ],
-  },
-}
+const hostsPath = path.resolve(__dirname, '../../hosts.json')
+const hosts = JSON.parse(fs.readFileSync(hostsPath, 'utf8'))
+
+const hostData = R.reduce((obj, h) => {
+  return R.merge(obj, { [h]: { currentStatus: 'unknown', statusHistory:[] }})
+}, {}, hosts)
+
+module.exports.loadAndPollHosts = () => module.exports.pollHosts(hosts)
 
 module.exports.pollHosts = (hosts) => {
   R.zip(hosts, R.map(pollUptime, hosts)).forEach(u => {
@@ -40,17 +26,10 @@ function updateHost(host, status) {
 }
 
 function pollUptime(host) {
-  const ping = spawn('ping', [ '-c', '1', host ])
   return new Promise((resolve, reject) => {
+    const ping = spawn('ping', [ '-c', '1', host ])
     ping.stdout.on('data', (data) => {
       const stringData = data.toString()
-      // console.log('data', stringData)
-      // ping start
-      // PING nitrogen.local (10.0.1.2): 56 data bytes
-      // if(stringData.match(/^PING/)) {
-      //   console.log('using unknown')
-      //   return 'unknown'
-      // }
       // ping result:
       // 64 bytes from 10.0.1.2: icmp_seq=0 ttl=64 time=161.777 ms
       if(stringData.match(/(1 packets received)|(bytes from)/)) {
@@ -58,7 +37,6 @@ function pollUptime(host) {
         // resolve('offline')
       }
       else {
-        console.log('using offline', stringData)
         resolve('offline')
       }
     })
@@ -67,7 +45,7 @@ function pollUptime(host) {
       console.error('error with ping', data.toString())
     })
 
-    // ping.on('close', (code) => console.log('ping done with code', code))
+    ping.on('close', (code) => console.log('ping ' + host + ' done with code', code))
   })
 }
 

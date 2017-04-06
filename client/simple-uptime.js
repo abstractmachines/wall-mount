@@ -6,34 +6,6 @@
 import * as d3 from 'd3'
 import axios from 'axios'
 
-const hosts = [
-  'nitrogen.local',
-  'foo',
-  'bar',
-  'bazz',
-]
-
-// const fakeData = {
-//   'foo': {
-//     currentStatus: 'online',
-//     statusHistory: [
-//       { status: 'online', time: new Date(), },
-//     ],
-//   },
-//   'bar': {
-//     currentStatus: 'offline',
-//     statusHistory: [
-//       { status: 'offline', time: new Date(), },
-//     ],
-//   },
-//   'bazz': {
-//     currentStatus: 'unknown',
-//     statusHistory: [
-//       { status: 'unknown', time: new Date(), },
-//     ],
-//   },
-// }
-
 const statusToColor = (s) => {
   switch(s) {
     case 'online':
@@ -45,32 +17,35 @@ const statusToColor = (s) => {
   }
 }
 
-const body = d3.select('body')
-const divs = body
+
+axios.get('/api/hosts').then((hostsRes) => {
+  const hosts = hostsRes.data
+  const body = d3.select('body')
+  const divs = body
   // .selectAll('div')
-  .data(hosts)
+    .data(hosts)
+  setInterval(() => {
+    return axios.get('/api/uptime').then((res) => {
+      const uptimeData = res.data
+      // TODO: use an actual html template to bootstrap this
 
-setInterval(() => {
-  axios.get('/api/uptime').then((res) => {
-    const uptimeData = res.data
-    // TODO: use an actual html template to bootstrap this
+      const divs = body
+        .selectAll('div')
+        .data(hosts)
 
-    const divs = body
-      .selectAll('div')
-      .data(hosts)
+      // exit cleans stuff up using magic granted by Faustian bargains.
+      divs.exit().remove()
 
-    // exit cleans stuff up using magic granted by Faustian bargains.
-    divs.exit().remove()
+      // enter - handles the creation and any fixed elements
+      divs
+        .enter()
+        .append('div')
+        .text(d => d)
 
-    // enter - handles the creation and any fixed elements
-    divs
-      .enter()
-      .append('div')
-      .text(d => d)
+      // update (implicit - no update() specified)
+      divs
+        .style('background-color', d => statusToColor(uptimeData[d].currentStatus))
 
-    // update (implicit - no update() specified)
-    divs
-      .style('background-color', d => statusToColor(uptimeData[d].currentStatus))
-
-  })
-}, 1000)
+    })
+  }, 1000)
+})
