@@ -28,16 +28,31 @@ function updateHost(host, status) {
 function pollUptime(host) {
   return new Promise((resolve, reject) => {
     const ping = spawn('ping', [ '-c', '1', host ])
+
     ping.stdout.on('data', (data) => {
+
       const stringData = data.toString()
+      const beginPing = Date.now()
+      var aPing = {
+        status: '',
+        info: '',
+        timestamp: beginPing
+      }
+
+      const pingString = stringData.match(
+        /\d* bytes from [\d+\.]*:\s\w*=\d\s[\w*]*=\d*\s\w*=\d*\.\d*\s\w*/g)
+
       // ping result:
       // 64 bytes from 10.0.1.2: icmp_seq=0 ttl=64 time=161.777 ms
-      if(stringData.match(/(1 packets received)|(bytes from)/)) {
-        resolve('online')
-        // resolve('offline')
+      if(stringData.match(pingString)) {
+        aPing.status = 'online'
+        aPing.info = pingString
+        resolve(aPing)
       }
       else {
-        resolve('offline')
+        aPing.status = 'offline'
+        aPing.info = 'request timeout'
+        resolve(aPing)
       }
     })
 
@@ -46,6 +61,7 @@ function pollUptime(host) {
     })
 
     ping.on('close', (code) => console.log('ping ' + host + ' done with code', code))
+
   })
 }
 
