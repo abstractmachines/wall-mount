@@ -32,27 +32,26 @@ function pollUptime(host) {
     ping.stdout.on('data', (data) => {
 
       const stringData = data.toString()
-      const beginPing = Date.now()
-      var aPing = {
-        status: '',
-        info: '',
-        timestamp: beginPing
-      }
-
-      const pingString = stringData.match(
-        /\d* bytes from [\d+\.]*:\s\w*=\d\s[\w*]*=\d*\s\w*=\d*\.\d*\s\w*/g)
-
+      const pingStamp = Date.now()
       // ping result:
       // 64 bytes from 10.0.1.2: icmp_seq=0 ttl=64 time=161.777 ms
-      if(stringData.match(pingString)) {
-        aPing.status = 'online'
-        aPing.info = pingString
-        resolve(aPing)
+      const pingLine = stringData.match(
+        /\d* bytes from [\d+\.]*:\s\w*=\d\s[\w*]*=\d*\s\w*=\d*\.\d*\s\w*/g)
+
+      const pingBack = {
+        status: '',
+        info: '',
+        timestamp: pingStamp
+      }
+      if(pingLine) {
+        pingBack.status = 'online'
+        pingBack.info = pingLine
+        resolve(pingBack)
       }
       else {
-        aPing.status = 'offline'
-        aPing.info = 'request timeout'
-        resolve(aPing)
+        pingBack.status = 'offline'
+        pingBack.info = ''
+        resolve(pingBack)
       }
     })
 
