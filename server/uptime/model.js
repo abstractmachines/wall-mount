@@ -22,7 +22,7 @@ module.exports.pollHosts = (hosts) => {
 
 function updateHost(host, status) {
   hostData[host].currentStatus = status
-  return status // just chain the value back
+  return status // just chain the value back 
 }
 
 function pollUptime(host) {
