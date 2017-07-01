@@ -22,8 +22,32 @@ module.exports.pollHosts = (hosts) => {
 
 function updateHost(host, status) {
   hostData[host].currentStatus = status
-  return status // just chain the value back 
+  return status // just chain the value back
 }
+
+/* TODO
+The timestamp is a data storage thing.
+I don't mind if we just wait until we're just about to talk to the db, or the
+db itself adds the timestamp.
+
+The thing about something like a regex like this is we can determine the
+'online' portion at the *same time* we determine the latency.
+So this is what I want to see with the regex.
+So, latency is the time=
+
+const matchData = stringData.match(
+/bytes from (.*?): icmp_seq=(.*?) ttl=(.*?) time=([\d\.]+?) ms$/)
+ bytes from [\d+\.]*: icmp_seq=\d* ttl=\d* time=\d*.\d ms
+if(matchData) {
+  const latency = matchData[4]
+  resolve(...
+
+  it returns the 4th match group.
+  I should surround it with a parseFloat or whatever it is.
+*/
+
+// TODO latency 0 when offline
+// TODO don't use timestamp, use latency (time= in ping data) to put into object
 
 function pollUptime(host) {
   return new Promise((resolve, reject) => {
@@ -35,8 +59,9 @@ function pollUptime(host) {
       const pingStamp = Date.now()
       // ping result:
       // 64 bytes from 10.0.1.2: icmp_seq=0 ttl=64 time=161.777 ms
+
       const pingLine = stringData.match(
-        /\d* bytes from [\d+\.]*:\s\w*=\d\s[\w*]*=\d*\s\w*=\d*\.\d*\s\w*/g)
+        /\d* bytes from (.*?): icmp_seq=(.*?) ttl=(.*?) time=([\d\.]+?) /g)
 
       const pingBack = {
         status: '',
@@ -46,6 +71,7 @@ function pollUptime(host) {
       if(pingLine) {
         pingBack.status = 'online'
         pingBack.info = pingLine
+        console.log(pingBack)
         resolve(pingBack)
       }
       else {
