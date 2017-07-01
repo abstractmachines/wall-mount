@@ -71,7 +71,6 @@ function pollUptime(host) {
       if(pingLine) {
         pingBack.status = 'online'
         pingBack.info = pingLine
-        console.log(pingBack)
         resolve(pingBack)
       }
       else {
