@@ -61,7 +61,13 @@ function pollUptime(host) {
       // 64 bytes from 10.0.1.2: icmp_seq=0 ttl=64 time=161.777 ms
 
       const pingLine = stringData.match(
-        /\d* bytes from (.*?): icmp_seq=(.*?) ttl=(.*?) time=([\d\.]+?) /g)
+        /\d* bytes from (.*?): icmp_seq=(.*?) ttl=(.*?) time=([\d\.]+?) ms/g)
+
+      console.log('pingLiiiiiine ', pingLine)
+
+      // const matchyFoo = pingLine[1]
+      //
+      // console.log('pingLTIIIIIIIME ', matchyFoo)
 
       const pingBack = {
         status: '',
